@@ -1,0 +1,102 @@
+---
+title: "Group Project 2 - Exploratory Data Analysis"
+author: "Mohamed Jalaly"
+date: "3/15/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(kableExtra)
+library(scales)
+library(skimr)
+library(magrittr)
+animals = read_csv("dataset11.csv")
+```
+
+# Exploratory Data Analysis
+
+First, we would like to understand the distribution of different animal types in our dataset from the shelter. This would give us a better idea if a single type of animal might be influencing the fit of the data.
+
+```{r animaltypes}
+
+animals %>% 
+  group_by(animal_type) %>% 
+  summarize(counts=n()) %>% 
+  mutate(proportion=percent(counts/sum(counts))) %>% 
+  kable()
+
+ggplot(animals, mapping=aes(x=animal_type, fill=factor(animal_type))) +  
+  geom_bar(aes(y = (..count..)/sum(..count..))) +
+  scale_y_continuous(labels=percent)+
+  labs(title="Frequency of Animal Type in Shelter Data",
+       x="Animal Type", y="Percentage")
+  
+```
+
+Additionally, we would like to investigate the distribution of animals by the method of arriving at the shelter.
+
+```{r intaketype}
+
+#animals$date = as.yearmon(paste(animals$year, animals$month), "%Y %m")
+
+animals %>% 
+  group_by(intake_type) %>% 
+  summarize(counts=n()) %>% 
+  mutate(proportion=percent(counts/sum(counts))) %>% 
+  kable()
+
+ggplot(animals, mapping=aes(x=intake_type, fill=factor(intake_type))) +  
+  geom_bar(aes(y = (..count..)/sum(..count..))) +
+  scale_y_continuous(labels=percent)+
+  labs(title="Frequency of Intake Type in Shelter Data",
+       x="Intake Type", y="Percentage")
+
+ggplot(animals, mapping=aes(x=intake_type, fill=factor(animal_type))) +  
+  geom_bar(aes(y = (..count..)/sum(..count..))) +
+  scale_y_continuous(labels=percent)+
+  labs(title="Frequency of Intake Type in Shelter Data",
+       x="Intake Type", y="Percentage")
+```
+
+Additionally, we want to look at the animals arrival trend to the shelter.
+
+```{r arrivaldistribution, eval=TRUE, echo=TRUE}
+
+# adding a date column
+View(animals)
+animals %>% 
+  group_by(date) %>% 
+  summarize(Animals_arriving=n()) %>% 
+  ggplot(mapping = aes(x=date, y=Animals_arriving))+
+  geom_line(col="blue")+
+  labs(title="Animals Arrival Timeseries", x="Date", y="Animal Arrival")
+
+```
+
+Finally, let us look at the summary statistics of the Time at Shelter, which is our variable of interest.
+
+```{r summstat}
+
+animals %>% 
+  select(time_at_shelter) %>% 
+  skim() %>% 
+  kable
+
+animals %>% 
+  select(time_at_shelter) %>% 
+  ggplot(mapping=aes(x=time_at_shelter))+
+  geom_histogram(col="white", binwidth = 3)
+
+###
+# split time:
+# 0-2: Very Short
+# 3-5: short
+# 6-8: mid
+# 9-11: long
+# 11+: Very long
+```
