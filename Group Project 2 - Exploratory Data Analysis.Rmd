@@ -38,11 +38,18 @@ ggplot(animals, mapping=aes(x=animal_type, fill=factor(animal_type))) +
   
 ```
 
+Given the relatively very low number of observations for Birds, Wildlife, and Livestock animal types, it is suggested to remove them from the dataset. This will retain 1656 observations out of the original 1678.
+
+```{r cleandata}
+animals.cleaned = animals %>% 
+  filter(animal_type=="DOG"|animals$animal_type=="CAT")
+```
+
 Additionally, we would like to investigate the distribution of animals by the method of arriving at the shelter.
 
 ```{r intaketype}
 
-#animals$date = as.yearmon(paste(animals$year, animals$month), "%Y %m")
+# animals$date = as.yearmon(paste(animals$year, animals$month), "%Y %m")
 
 animals %>% 
   group_by(intake_type) %>% 
@@ -78,7 +85,7 @@ animals %>%
 
 ```
 
-Finally, let us look at the summary statistics of the Time at Shelter, which is our variable of interest.
+Furthermore, let us look at the summary statistics of the Time at Shelter, which is our variable of interest.
 
 ```{r summstat}
 
@@ -92,11 +99,22 @@ animals %>%
   ggplot(mapping=aes(x=time_at_shelter))+
   geom_histogram(col="white", binwidth = 3)
 
-###
-# split time:
-# 0-2: Very Short
-# 3-5: short
-# 6-8: mid
-# 9-11: long
-# 11+: Very long
+```
+
+Finally, as the outcome_type is determined after the time_at_shelter, it may not have a direct influence on the time_at_shelter. However, it is worth investigating whether the time_at_shelter is related to the outcome_type.
+
+```{r outcome}
+
+animals %>% 
+  group_by(outcome_type) %>% 
+  ggplot(mapping=aes(y=time_at_shelter, color=factor(outcome_type)))+
+  geom_boxplot()
+
+animals %>% 
+  group_by(outcome_type) %>% 
+  summarize(mean.time.at.shelter = round(mean(time_at_shelter),0),
+            median.time.at.shelter = round(median(time_at_shelter),2),
+            max.time.at.shelter=round(max(time_at_shelter),2)) %>% 
+  kable()
+
 ```
