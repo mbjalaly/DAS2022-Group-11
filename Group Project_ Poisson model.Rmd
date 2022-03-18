@@ -128,6 +128,7 @@ qchisq(0.95,1655)
 #Negative binomial
 Another way to deal with the Overdispersion is use the negative binomial model
 ```{r}
-
+animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+month+year, data=animals.cleaned)
+summary(animals.glm.nb)
 ```
 
