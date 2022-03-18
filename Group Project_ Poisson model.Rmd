@@ -56,7 +56,11 @@ ggplot(data=animals,aes(x=time_at_shelter))+
 We could see from the histgram, almost time_at_shelter is between 0 and 10. 
 We think month and year are meaningless to our analysis. So we will exclude these two variables. 
 ```{r}
+animals$animal_type[which(animals$animal_type=='BIRD')]<-"OTHERS"
+animals$animal_type[which(animals$animal_type=="WILDLIFE")]<-"OTHERS"
+animals$animal_type[which(animals$animal_type=="LIVESTOCK")]<-"OTHERS"
 animals.cleaned=subset(animals,select=-c(month,year))
+
 ```
 
 Then we want to check if there is excess zero in our data.
