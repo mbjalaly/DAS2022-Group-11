@@ -70,6 +70,7 @@ nrow(zero_set)
 We have 380 zeros in our model which is a vary large number so we think there is zero-exceed in our dataset.
 
 ```{r}
+<<<<<<< HEAD
 animals.glm.poisson = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned, family=poisson(link="log"))
 animals.glm.poisson%>%
   summary()
@@ -86,18 +87,32 @@ animals.glm%>%
 ```
 
 We could see all the variables are significant here.
+=======
+animals.glm = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned, family=poisson(link="log"))
+animals.glm%>%
+  summary()
+```
+>>>>>>> b37e7451f03f6ebb43bbb52c389b52a9353198d6
 ```{r,check goodness-of-fit}
 #person statistic
 sum(resid(animals.glm ,type="pearson")^2)
 #Chi-Square(1667)
+<<<<<<< HEAD
 qchisq(0.95,1666,ncp=0)
 ```
 
 From summary, we could see that all other variables are significant in our model. However, both the deviance 8654.6 and pearson statistic 11064.29 are larger than Chi-Square(1666)  1762.07 which indicate a poor fit.
+=======
+qchisq(0.95,1667,ncp=0)
+```
+
+Both the deviance 8883.7 and pearson statistic 11632.76 are larger than Chi-Square(1667) 1763.099 which indicate a poor fit.
+>>>>>>> b37e7451f03f6ebb43bbb52c389b52a9353198d6
 
 #check if this model has Overdispersion
 For poisson model, variance should equal to mean. We build scatter plots to check this assumption.
 ```{r}
+<<<<<<< HEAD
 ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animaldata$time_at_shelter-fitted(animals.glm))^2)))+ geom_point(col="#f46d43") +geom_abline(slope=1, intercept=0, col="#a6d96a", size=1) + ylab(expression((y-hat(mu))^2)) + xlab(expression(hat(mu)))
 ```
 
@@ -107,17 +122,43 @@ Firstly, we use Quasi-Poisson model to deal with overdispersion.
 #Quasi-Poisson model
 ```{r}
 animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata, family=quasipoisson(link="log"))
+=======
+ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animals.cleaned$time_at_shelter-fitted(animals.glm))^2)))+ geom_point(col="#f46d43") +geom_abline(slope=1, intercept=0, col="#a6d96a", size=1) + ylab(expression((y-hat(mu))^2)) + xlab(expression(hat(mu)))
+```
+
+We could see that a large number of points are above the line which means these exits overdispersion. There are several methods to deal with overdispersion.
+
+Firstly, we use Quasi-Poisson model to deal with overdispersion
+#Quasi-Poisson model
+```{r}
+animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned, family=quasipoisson(link="log"))
 animals.glm.quasi%>%
   summary()
 drop1(animals.glm.quasi, test = "F")
 ```
+Based on F-test,we intend to drop chip_status first.
+```{r}
+animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + outcome_type, data=animals.cleaned, family=quasipoisson(link="log"))
+>>>>>>> b37e7451f03f6ebb43bbb52c389b52a9353198d6
+animals.glm.quasi%>%
+  summary()
+drop1(animals.glm.quasi, test = "F")
+```
+<<<<<<< HEAD
 Based on F-test, all variables could be included.
+=======
+Now the left variables are all significant.
+>>>>>>> b37e7451f03f6ebb43bbb52c389b52a9353198d6
 
 Compare the deviance of poisson model and quasi-poisson model.
 ```{r}
 c(animals.glm$deviance, animals.glm.quasi$deviance)
 ```
+<<<<<<< HEAD
 The deviance of Quasi-Poisson model is equal to poisson model.
+=======
+The deviance of Quasi-Poisson model is bigger than poisson model.
+>>>>>>> b37e7451f03f6ebb43bbb52c389b52a9353198d6
 
 Residual plots vs. predicted
 ```{r}
@@ -135,6 +176,7 @@ abline(h = c(-3, -2, 0, 2, 3), lty = "dotted", col = "red")
 We can see in the plots that almost all residuals are contained within ±3 in the quasi-Poisson model, while quite a few are outside this range for the original Poisson model.
 
 Another way to solve overdispersion is negative binomial model
+<<<<<<< HEAD
 ```{r}
 animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata)
 animals.glm.nb%>%
@@ -148,10 +190,40 @@ c(animals.glm$deviance,animals.glm.nb$deviance)
 c(animals.glm.nb$aic,animals.glm.nb$aic)
 ```
 We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal.
+=======
+```{r}
+animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animals.cleaned)
+animals.glm.nb%>%
+  summary()
+```
+compare the poisson model and negative binomial model
+```{r}
+#deviance 
+c(animals.glm$deviance,animals.glm.nb$deviance)
+#AIC
+c(animals.glm$aic,animals.glm.nb$aic)
+```
+We can see the deviance and AIC of negative binomial model are much smaller than the poisson one.
+>>>>>>> b37e7451f03f6ebb43bbb52c389b52a9353198d6
 
 #deal with zero-exceed.
 ```{r}
 animal.hurdle<- hurdle(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata, dist = "negbin",link = c("logit"))
+summary(animal.hurdle)
+```
+
+<<<<<<< HEAD
+```{r}
+sum(predict(animal.hurdle, type = "prob")[,1])
+```
+
+we could see that 380 "0" counts hurdle model predict which happens to be the number of zeros in the observed data. 
+
+```{r}
+=======
+#deal with zero-exceed.
+```{r}
+animal.hurdle<- hurdle(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animals.cleaned, dist = "negbin",link = c("logit"))
 summary(animal.hurdle)
 ```
 
@@ -162,6 +234,7 @@ sum(predict(animal.hurdle, type = "prob")[,1])
 we could see that 380 "0" counts hurdle model predict which happens to be the number of zeros in the observed data. 
 
 ```{r}
+>>>>>>> b37e7451f03f6ebb43bbb52c389b52a9353198d6
 #install.packages("countreg", repos="http://R-Forge.R-project.org")
 library(countreg)
 rootogram(animal.hurdle, max = 80)
@@ -171,6 +244,10 @@ The line at 0 allows us to easily visualize where the model is over- or under-fi
 c(animals.glm.nb$aic,animals.glm.nb$aic)
 AIC(animal.hurdle)
 ```
+<<<<<<< HEAD
 Based on AIC, the negative binomial model after dealing with zero-exceed may be the best model.
+=======
+conclusion: All four variables will influence the time that animals stay in shelter, however, except for cats and dogs, which are common animal types, other animals types have no significant effect on the time they stay in shelter. At the same time, those pets that did not scan the chip tag did not have a significant effect on shelter time.
+>>>>>>> b37e7451f03f6ebb43bbb52c389b52a9353198d6
 
 
