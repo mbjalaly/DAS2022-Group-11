@@ -140,10 +140,10 @@ compare the poisson model and negative binomial model
 ```{r}
 #deviance 
 c(animals.glm$deviance,animals.glm.nb$deviance)
-#negative binomial model
-c(animals.glm.nb$aic,animals.glm.nb$aic)
+#AIC
+c(animals.glm$aic,animals.glm.nb$aic)
 ```
-We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal.
+We can see the deviance and AIC of negative binomial model are much smaller than the poisson one.
 
 
 #deal with zero-exceed.
