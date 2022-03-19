@@ -1,6 +1,6 @@
 ---
 title: "Group Project 2 - Poisson model"
-author: "YueXu Wang"
+author: "YueXu Wang & LiJia Wang"
 date: "3/18/2022"
 output: pdf_document
 ---
@@ -91,7 +91,7 @@ ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animals.cleaned$time_
 
 We could see that a large number of points are above the line which means these exits overdispersion. There are several methods to deal with overdispersion.
 
-Firstly, we use Quasi-Poisson model
+Firstly, we use Quasi-Poisson model to deal with overdispersion
 #Quasi-Poisson model
 ```{r}
 animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned, family=quasipoisson(link="log"))
@@ -138,21 +138,13 @@ animals.glm.nb%>%
 ```
 compare the poisson model and negative binomial model
 ```{r}
-#poisson
-c(animals.glm$deviance,animals.glm$aic)
-#negative binomial model
-c(animals.glm.nb$deviance,animals.glm.nb$aic)
-```
-We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal.
-
-
-compare the poisson model and negative binomial model
-```{r}
-#deviance
+#deviance 
 c(animals.glm$deviance,animals.glm.nb$deviance)
 #negative binomial model
 c(animals.glm.nb$aic,animals.glm.nb$aic)
 ```
+We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal.
+
 
 #deal with zero-exceed.
 ```{r}
@@ -176,11 +168,6 @@ The line at 0 allows us to easily visualize where the model is over- or under-fi
 c(animals.glm.nb$aic,animals.glm.nb$aic)
 AIC(animal.hurdle)
 ```
-
-
-```{r}
-animal_cleaned2
-```
-
+conclusion: All four variables will influence the time that animals stay in shelter, however, except for cats and dogs, which are common animal types, other animals types have no significant effect on the time they stay in shelter. At the same time, those pets that did not scan the chip tag did not have a significant effect on shelter time.
 
 
