@@ -27,8 +27,7 @@ glimpse(animals)
 ```
 
 # Poisson model
-Our task is to find Which factors influence the number of days an animal spends in the shelter before their final outcome is decided? So we could regard time_at_shelter as response variable and since it is a count data , we intend to use poisson regression model to fit our data. 
-
+Our task is to find Which factors influence the number of days an animal spends in the shelter before their final outcome is decided.we regard time_at_shelter as response variable and since it is a count data, we intend to use poisson regression model to fit our data. 
 
 Firstly, we use scatter plot to check if there are some extreme points.
 ```{r}
@@ -45,22 +44,21 @@ p2
 p3
 p4
 ```
-From the scatter plots, we could see that for variable animal_type, there are several types of animals which are LIVESTOCK, BIRD and WILDLIFE in small numbers.
 
 We also need to check the distribution of our outcome variable time_at_shelter.
-
 ```{r}
 ggplot(data=animals,aes(x=time_at_shelter))+
   geom_histogram()
 ```
 We could see from the histgram, almost time_at_shelter is between 0 and 10. 
 We think month and year are meaningless to our analysis. So we will exclude these two variables. 
+From the scatter plots, we could see that for variable animal_type, there are several types of animals which are LIVESTOCK, BIRD and WILDLIFE in small numbers.So we want to combine these three types into one called 'others'. We think month and year are meaningless to our analysis. So we will exclude these two variables from our model. 
+
 ```{r}
 animals$animal_type[which(animals$animal_type=='BIRD')]<-"OTHERS"
 animals$animal_type[which(animals$animal_type=="WILDLIFE")]<-"OTHERS"
 animals$animal_type[which(animals$animal_type=="LIVESTOCK")]<-"OTHERS"
 animals.cleaned=subset(animals,select=-c(month,year))
-
 ```
 
 Then we want to check if there is excess zero in our data.
@@ -71,38 +69,25 @@ nrow(zero_set)
 ```
 We have 380 zeros in our model which is a vary large number so we think there is zero-exceed in our dataset.
 
-We think month and year are meaningless to our analysis. So we will exclude these two variables from our model. 
 
 ```{r}
 animals.glm = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned, family=poisson(link="log"))
 animals.glm%>%
   summary()
 ```
-the animal_type and outcome_type variables are not significant in our model.
 ```{r,check goodness-of-fit}
 #person statistic
 sum(resid(animals.glm ,type="pearson")^2)
-#Chi-Square(1665)
-qchisq(0.95,1665,ncp=0)
+#Chi-Square(1667)
+qchisq(0.95,1667,ncp=0)
 ```
 
-Both the deviance 8872.8 and pearson statistic 11629.56 are larger than Chi-Square(1665) 1761.042 which indicate a poor fit.
+Both the deviance 8883.7 and pearson statistic 11632.76 are larger than Chi-Square(1667) 1763.099 which indicate a poor fit.
 
 #check if this model has Overdispersion
 For poisson model, variance should equal to mean. We build scatter plots to check this assumption.
 ```{r}
 ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animals.cleaned$time_at_shelter-fitted(animals.glm))^2)))+ geom_point(col="#f46d43") +geom_abline(slope=1, intercept=0, col="#a6d96a", size=1) + ylab(expression((y-hat(mu))^2)) + xlab(expression(hat(mu)))
-```
-```{r,outlier}
-animals.outlier=animals.cleaned%>%
-  mutate(x=fitted(animals.glm),y=(animals.cleaned$time_at_shelter-fitted(animals.glm))^2)
-animals.cleaned2=animals.outlier %>% slice(-c(191,135))
-```
-
-```{r}
-animals.glm2 = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned2, family=poisson(link="log"))
-animals.glm2%>%
-  summary()
 ```
 
 We could see that a large number of points are above the line which means these exits overdispersion. There are several methods to deal with overdispersion.
@@ -127,7 +112,7 @@ Compare the deviance.
 ```{r}
 c(animals.glm$deviance, animals.glm.quasi$deviance)
 ```
-The deviance of Quasi-Poisson model is smaller than poisson model.
+The deviance of Quasi-Poisson model is bigger than poisson model.
 
 Residual plots vs. predicted
 ```{r}
@@ -145,10 +130,7 @@ abline(h = c(-3, -2, 0, 2, 3), lty = "dotted", col = "red")
 ```
 We can see in the plots that almost all residuals are contained within ±3 in the quasi-Poisson model, while quite a few are outside this range for the original Poisson model.
 
-```{r}
-animals.glm.cleaned$df.null
-qchisq(0.95,1655)
-```
 
-#2022/3/18
+
+
 
