@@ -1,6 +1,6 @@
 ---
 title: "Group Project 2 - Poisson model"
-author: "YueXu Wang"
+author: "YueXu Wang & LiJia Wang"
 date: "3/18/2022"
 output: pdf_document
 ---
@@ -18,18 +18,18 @@ library(tidyverse)
 library(lmtest)
 library(MASS)
 library(pscl)
-animals = dataset11
+library(gridExtra)
 ```
 
 ```{r}
+animals=read.csv('dataset11.csv')
 glimpse(animals)
 ```
 
 # Poisson model
-We could regard variable time_at_shelter a count response and build poisson regression model for our analysis. 
+Our task is to find Which factors influence the number of days an animal spends in the shelter before their final outcome is decided.we regard time_at_shelter as response variable and since it is a count data, we intend to use poisson regression model to fit our data. 
 
-
-First we use scatter plot to check if there are some extreme points.
+Firstly, we use scatter plot to check if there are some extreme points.
 ```{r}
 p1<-ggplot(animals,mapping=aes(x=intake_type,y=time_at_shelter))+
   geom_point(col="#f46d43")
@@ -37,81 +37,92 @@ p2<-ggplot(animals,mapping=aes(x=chip_status,y=time_at_shelter))+
   geom_point(col="#f46d43")
 p3<-ggplot(animals,mapping=aes(x=animal_type,y=time_at_shelter))+
   geom_point(col="#f46d43")
-
+p4<-ggplot(animals,mapping=aes(x=outcome_type,y=time_at_shelter))+
+  geom_point(col="#f46d43")
 p1
 p2
 p3
-
+p4
 ```
-From the scatter plots, we could see that for variable animal_type, there are few animals which type are LIVESTOCK & BIRD.We need to determine whether these two animal types are specific to the whole model.
-Maybe we should ignore these two types and build a new datasets without these two types.
 
 We also need to check the distribution of our outcome variable time_at_shelter.
-
 ```{r}
 ggplot(data=animals,aes(x=time_at_shelter))+
   geom_histogram()
 ```
 We could see from the histgram, almost time_at_shelter is between 0 and 10. 
-How many zeros in our datasets.
+We think month and year are meaningless to our analysis. So we will exclude these two variables. 
+From the scatter plots, we could see that for variable animal_type, there are several types of animals which are LIVESTOCK, BIRD and WILDLIFE in small numbers.So we want to combine these three types into one called 'others'. We think month and year are meaningless to our analysis. So we will exclude these two variables from our model. 
+
+```{r}
+animals$animal_type[which(animals$animal_type=='BIRD')]<-"OTHERS"
+animals$animal_type[which(animals$animal_type=="WILDLIFE")]<-"OTHERS"
+animals$animal_type[which(animals$animal_type=="LIVESTOCK")]<-"OTHERS"
+animals.cleaned=subset(animals,select=-c(month,year))
+```
+
+Then we want to check if there is excess zero in our data.
 ```{r}
 zero_set<-animals.cleaned%>%
   filter(time_at_shelter=="0")
 nrow(zero_set)
 ```
-We have 374 zeros in our model which is a vary large number so we have to consider if there exits zero-exceed in our model in later analysis.
+We have 380 zeros in our model which is a vary large number so we think there is zero-exceed in our dataset.
 
-
-#model with whole data
 ```{r}
-animals.glm = glm(time_at_shelter~animal_type + intake_type + chip_status, data=animals, family=poisson(link="log"))
+animals.glm = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned, family=poisson(link="log"))
 animals.glm%>%
   summary()
 ```
-the animal_type variable is not significant in our model.
-#model with cleaned data
-```{r}
-animals.cleaned = animals[animals$animal_type=="DOG"|animals$animal_type=="CAT",]
-animals.glm.cleaned = glm(time_at_shelter~animal_type + intake_type + chip_status, data=animals.cleaned, family=poisson(link="log"))
-animals.glm.cleaned%>%
-  summary()
-
+```{r,check goodness-of-fit}
+#person statistic
+sum(resid(animals.glm ,type="pearson")^2)
+#Chi-Square(1667)
+qchisq(0.95,1667,ncp=0)
 ```
-After ignoreing animal type bird and livestock, we could see that all variables are significant here, and the AIC of cleaned model is smaller than the first model which suggests we should use the cleaned datasets. And because too little data and insufficient evidence on these two animal types, we will ignore these two types here.
+
+From summary, we could see that except outcome_typeFOSTER, all other variables are significant in our model. However, both the deviance 8883.7 and pearson statistic 11632.76 are larger than Chi-Square(1667) 1763.099 which indicate a poor fit.
 
 #check if this model has Overdispersion
 For poisson model, variance should equal to mean. We build scatter plots to check this assumption.
 ```{r}
-ggplot(animals.glm.cleaned, aes(x=log(fitted(animals.glm.cleaned)), y=log((animals.cleaned$time_at_shelter-fitted(animals.glm.cleaned))^2)))+ geom_point(col="#f46d43") +geom_abline(slope=1, intercept=0, col="#a6d96a", size=1) + ylab(expression((y-hat(mu))^2)) + xlab(expression(hat(mu)))
+ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animals.cleaned$time_at_shelter-fitted(animals.glm))^2)))+ geom_point(col="#f46d43") +geom_abline(slope=1, intercept=0, col="#a6d96a", size=1) + ylab(expression((y-hat(mu))^2)) + xlab(expression(hat(mu)))
 ```
-We could see that a large number of points are above the line which means these exits overdispersion.
-There are several methods to deal with overdispersion.
 
-First we use Quasi-Poisson model
+We could see that a large number of points are above the line which means our model exits overdispersion. There are several methods to deal with overdispersion.
+
+Firstly, we use Quasi-Poisson model to deal with overdispersion.
 #Quasi-Poisson model
 ```{r}
-animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + chip_status, data=animals.cleaned, family=quasipoisson(link="log"))
+animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animals.cleaned, family=quasipoisson(link="log"))
 animals.glm.quasi%>%
   summary()
 drop1(animals.glm.quasi, test = "F")
-
 ```
-Based on F-test, animal_type, intake_type and chip_status are all significant in our model.
-Compare the deviance.
+Based on F-test, we intend to drop chip_status first.
+Build a new model without chip_status.
 ```{r}
-c(animals.glm.cleaned$null.deviance, animals.glm.quasi$null.deviance)
+animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + outcome_type, data=animals.cleaned, family=quasipoisson(link="log"))
+animals.glm.quasi%>%
+  summary()
+drop1(animals.glm.quasi, test = "F")
 ```
-The deviance of these two models are equal.
+Now the left variables are all significant.
+
+Compare the deviance of poisson model and quasi-poisson model.
+```{r}
+c(animals.glm$deviance, animals.glm.quasi$deviance)
+```
+The deviance of Quasi-Poisson model is bigger than poisson model.
 
 Residual plots vs. predicted
 ```{r}
-pred <- predict(animals.glm.cleaned, type = "response")
-stand.resid <- rstandard(model = animals.glm.cleaned, type = "pearson") # Standardised Pearson residuals
+pred <- predict(animals.glm, type = "response")
+stand.resid <- rstandard(model = animals.glm, type = "pearson") # Standardised Pearson residuals
 par(mfrow=c(1,2))
 plot(x = pred, y = stand.resid, xlab = "Predicted count", ylab = "Standardised Pearson residuals",
 main = "Regular likelihood", ylim = c(-5,5))
 abline(h = c(-3, -2, 0, 2, 3), lty = "dotted", col = "red")
-
 pred <- predict(animals.glm.quasi, type = "response")
 stand.resid <- rstandard(model = animals.glm.quasi, type = "pearson") # Standardised Pearson residuals
 plot(x = pred, y = stand.resid, xlab = "Predicted count", ylab = "Standardised Pearson residuals", main = "Quasi-likelihood", ylim = c(-5,5))
@@ -119,15 +130,46 @@ abline(h = c(-3, -2, 0, 2, 3), lty = "dotted", col = "red")
 ```
 We can see in the plots that almost all residuals are contained within ±3 in the quasi-Poisson model, while quite a few are outside this range for the original Poisson model.
 
+Another way to solve overdispersion is negative binomial model
 ```{r}
-animals.glm.cleaned$df.null
-qchisq(0.95,1655)
+animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animals.cleaned)
+animals.glm.nb%>%
+  summary()
+```
+compare the poisson model and negative binomial model
+```{r}
+#deviance
+c(animals.glm$deviance,animals.glm.nb$deviance)
+#negative binomial model
+c(animals.glm.nb$aic,animals.glm.nb$aic)
+```
+We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal.
+
+#deal with zero-exceed.
+```{r}
+animal.hurdle<- hurdle(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animals.cleaned, dist = "negbin",link = c("logit"))
+summary(animal.hurdle)
+```
+
+```{r}
+sum(predict(animal.hurdle, type = "prob")[,1])
+```
+
+we could see that 380 "0" counts hurdle model predict which happens to be the number of zeros in the observed data. 
+
+```{r}
+#install.packages("countreg", repos="http://R-Forge.R-project.org")
+library(countreg)
+rootogram(animal.hurdle, max = 80)
+```
+The line at 0 allows us to easily visualize where the model is over- or under-fitting. At 0 it fits perfectly by design.We could see that counts 3,4 we see dramatic over-fitting (over the line) and then pronounced under-fitting at counts 5 (under the line), but not very much. Check AIC, we could see that aic of hurdle model is lower which means better fit.
+```{r}
+c(animals.glm.nb$aic,animals.glm.nb$aic)
+AIC(animal.hurdle)
 ```
 
 
-#Negative binomial
-Another way to deal with the Overdispersion is use the negative binomial model
 ```{r}
-
+animal_cleaned2
 ```
 
