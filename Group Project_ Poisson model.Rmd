@@ -132,8 +132,9 @@ We can see in the plots that almost all residuals are contained within ±3 in th
 
 Another way to solve overdispersion is negative binomial model
 ```{r}
-animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status, data=animals.cleaned)
-summary(animals.glm.nb)
+animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animals.cleaned)
+animals.glm.nb%>%
+  summary()
 ```
 compare the poisson model and negative binomial model
 ```{r}
@@ -142,7 +143,44 @@ c(animals.glm$deviance,animals.glm$aic)
 #negative binomial model
 c(animals.glm.nb$deviance,animals.glm.nb$aic)
 ```
-We can see the deviance and AIC of negative binomial model are smaller than poisson model.
+We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal.
+
+
+compare the poisson model and negative binomial model
+```{r}
+#deviance
+c(animals.glm$deviance,animals.glm.nb$deviance)
+#negative binomial model
+c(animals.glm.nb$aic,animals.glm.nb$aic)
+```
+
+#deal with zero-exceed.
+```{r}
+animal.hurdle<- hurdle(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animals.cleaned, dist = "negbin",link = c("logit"))
+summary(animal.hurdle)
+```
+
+```{r}
+sum(predict(animal.hurdle, type = "prob")[,1])
+```
+
+we could see that 380 "0" counts hurdle model predict which happens to be the number of zeros in the observed data. 
+
+```{r}
+#install.packages("countreg", repos="http://R-Forge.R-project.org")
+library(countreg)
+rootogram(animal.hurdle, max = 80)
+```
+The line at 0 allows us to easily visualize where the model is over- or under-fitting. At 0 it fits perfectly by design.We could see that counts 3,4 we see dramatic over-fitting (over the line) and then pronounced under-fitting at counts 5 (under the line), but not very much. Check AIC, we could see that aic of hurdle model is lower which means better fit.
+```{r}
+c(animals.glm.nb$aic,animals.glm.nb$aic)
+AIC(animal.hurdle)
+```
+
+
+```{r}
+animal_cleaned2
+```
 
 
 
