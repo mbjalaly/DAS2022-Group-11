@@ -69,7 +69,6 @@ nrow(zero_set)
 ```
 We have 380 zeros in our model which is a vary large number so we think there is zero-exceed in our dataset.
 
-
 ```{r}
 animals.glm = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned, family=poisson(link="log"))
 animals.glm%>%
@@ -108,7 +107,8 @@ animals.glm.quasi%>%
 drop1(animals.glm.quasi, test = "F")
 ```
 Now the left variables are all significant.
-Compare the deviance.
+
+Compare the deviance of poisson model and quasi-poisson model.
 ```{r}
 c(animals.glm$deviance, animals.glm.quasi$deviance)
 ```
@@ -130,7 +130,19 @@ abline(h = c(-3, -2, 0, 2, 3), lty = "dotted", col = "red")
 ```
 We can see in the plots that almost all residuals are contained within ±3 in the quasi-Poisson model, while quite a few are outside this range for the original Poisson model.
 
-
+Another way to solve overdispersion is negative binomial model
+```{r}
+animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status, data=animals.cleaned)
+summary(animals.glm.nb)
+```
+compare the poisson model and negative binomial model
+```{r}
+#poisson
+c(animals.glm$deviance,animals.glm$aic)
+#negative binomial model
+c(animals.glm.nb$deviance,animals.glm.nb$aic)
+```
+We can see the deviance and AIC of negative binomial model are smaller than poisson model.
 
 
 
