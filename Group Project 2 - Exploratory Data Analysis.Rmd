@@ -38,12 +38,7 @@ ggplot(animals, mapping=aes(x=animal_type, fill=factor(animal_type))) +
   
 ```
 
-Given the relatively very low number of observations for Birds, Wildlife, and Livestock animal types, it is suggested to remove them from the dataset. This will retain 1656 observations out of the original 1678.
-
-```{r cleandata}
-animals.cleaned = animals %>% 
-  filter(animal_type=="DOG"|animals$animal_type=="CAT")
-```
+Given the relatively very low number of observations for Birds, Wildlife, and Livestock animal types, it is suggested to combine these three categories into one, called 'others' for the formal analysis.
 
 Additionally, we would like to investigate the distribution of animals by the method of arriving at the shelter.
 
