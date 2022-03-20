@@ -88,16 +88,6 @@ animals.glm%>%
 
 We could see all the variables are significant here.
 
-```{r}
-#person statistic
-sum(resid(animals.glm ,type="pearson")^2)
-#Chi-Square(1667)
-qchisq(0.95,1666,ncp=0)
-```
-
-From summary, we could see that all other variables are significant in our model. However, both the deviance 8654.6 and pearson statistic 11552.79 are larger than Chi-Square(1666)  1762.07 which indicate a poor fit.
-
-
 
 #check if this model has Overdispersion
 For poisson model, variance should equal to mean. We build scatter plots to check this assumption.
@@ -107,16 +97,11 @@ ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animaldata$time_at_sh
 ```
 
 We could see that a large number of points are above the line which means our model exits overdispersion. There are several methods to deal with overdispersion.
-
-Firstly, we use Quasi-Poisson model to deal with overdispersion.
-#Quasi-Poisson model
 ```{r}
-animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata, family=quasipoisson(link="log"))
-
-ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animaldata$time_at_shelter-fitted(animals.glm))^2)))+ geom_point(col="#f46d43") +geom_abline(slope=1, intercept=0, col="#a6d96a", size=1) + ylab(expression((y-hat(mu))^2)) + xlab(expression(hat(mu)))
+animals.glm$deviance/animals.glm$df.residual
 ```
+A guideline is that if the ratio of residual error to residual degrees of freedom exceeds 1.5, the model is overdispersed. So the poisson model is a poor fit.
 
-We could see that a large number of points are above the line which means these exits overdispersion. There are several methods to deal with overdispersion.
 
 Firstly, we use Quasi-Poisson model to deal with overdispersion
 #Quasi-Poisson model
@@ -128,12 +113,11 @@ drop1(animals.glm.quasi, test = "F")
 ```
 Based on F-test, all variables are significant here and could be included in our model.
 
-Compare the deviance of poisson model and quasi-poisson model.
 ```{r}
-c(animals.glm$deviance, animals.glm.quasi$deviance)
+animals.glm.quasi$deviance/animals.glm.quasi$df.residual
 ```
+Check the ratio again, the quasi-poisson also fit our data not very well.
 
-The deviance of Quasi-Poisson model is equal to poisson model.
 
 
 Residual plots vs. predicted
@@ -151,35 +135,27 @@ abline(h = c(-3, -2, 0, 2, 3), lty = "dotted", col = "red")
 ```
 We can see in the plots that almost all residuals are contained within ±3 in the quasi-Poisson model, while quite a few are outside this range for the original Poisson model.
 
+
+#negative bionimal model
 Another way to solve overdispersion is negative binomial model
-<<<<<<< HEAD
 ```{r}
 animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata)
 animals.glm.nb%>%
   summary()
 ```
-compare the poisson model and negative binomial model
+
+compare the poisson model and negative binomial model 
 ```{r}
 #deviance
 c(animals.glm$deviance,animals.glm.nb$deviance)
 #negative binomial model
 c(animals.glm.nb$aic,animals.glm.nb$aic)
+#ratio for negative binomial model
+animals.glm.nb$devianc/animals.glm.nb$df.residual
 ```
-We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal.
+We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal. As for the deviance ratio, we could see that 1.178912 is smaller than 1.5, so negative binomial model fit our data better.
 
-```{r}
-animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata)
-animals.glm.nb%>%
-  summary()
-```
-compare the poisson model and negative binomial model
-```{r}
-#deviance 
-c(animals.glm$deviance,animals.glm.nb$deviance)
-#AIC
-c(animals.glm$aic,animals.glm.nb$aic)
-```
-We can see the deviance and AIC of negative binomial model are much smaller than the poisson one.
+
 
 #deal with zero-exceed.
 ```{r}
@@ -202,11 +178,22 @@ library(countreg)
 rootogram(animal.hurdle, max = 80)
 ```
 The line at 0 allows us to easily visualize where the model is over- or under-fitting. At 0 it fits perfectly by design.We could see that counts 3,4 we see dramatic over-fitting (over the line) and then pronounced under-fitting at counts 5 (under the line), but not very much. Check AIC, we could see that aic of hurdle model is lower which means better fit.
+
+
 ```{r}
-c(animals.glm.nb$aic,animals.glm.nb$aic)
+animals.glm.nb$aic
 AIC(animal.hurdle)
 ```
+hurdle model have a smaller AIC value than negative binomial model.
 
-Based on AIC, the negative binomial model after dealing with zero-exceed may be the best model.
+extra comparsion
+```{r}
+library(rcompanion)
+compareGLM(animals.glm,animals.glm.nb)
+```
+
+
+
+
 
 
