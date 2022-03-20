@@ -26,9 +26,6 @@ animals=read.csv('dataset11.csv')
 glimpse(animals)
 ```
 
-# Poisson model
-Our task is to find Which factors influence the number of days an animal spends in the shelter before their final outcome is decided.we regard time_at_shelter as response variable and since it is a count data, we intend to use poisson regression model to fit our data. 
-
 Firstly, we use scatter plot to check if there are some extreme points.
 ```{r}
 p1<-ggplot(animals,mapping=aes(x=intake_type,y=time_at_shelter))+
@@ -44,14 +41,6 @@ p2
 p3
 p4
 ```
-
-We also need to check the distribution of our outcome variable time_at_shelter.
-```{r}
-ggplot(data=animals,aes(x=time_at_shelter))+
-  geom_histogram()
-```
-We could see from the histgram, almost time_at_shelter is between 0 and 10. 
-We think month and year are meaningless to our analysis. So we will exclude these two variables. 
 From the scatter plots, we could see that for variable animal_type, there are several types of animals which are LIVESTOCK, BIRD and WILDLIFE in small numbers.So we want to combine these three types into one called 'others'. We think month and year are meaningless to our analysis. So we will exclude these two variables from our model. 
 
 ```{r}
@@ -68,14 +57,14 @@ zero_set<-animals.cleaned%>%
 nrow(zero_set)
 ```
 We have 380 zeros in our model which is a vary large number so we think there is zero-exceed in our dataset.
-
+# Poisson model
+Our task is to find Which factors influence the number of days an animal spends in the shelter before their final outcome is decided. we regard time_at_shelter as response variable and since it is a count data, we intend to use poisson regression model to fit our data. We think month and year are meaningless to our analysis. So we will exclude these two variables from our model.
 ```{r}
-
 animals.glm.poisson = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animals.cleaned, family=poisson(link="log"))
 animals.glm.poisson%>%
   summary()
 ```
-From the output of our model, we could see that outcome_typeFOSTER is not significant, think about the scatter plot of time_at_shelter against outcome_type, there exits a very large time_at_shelter value equal to 69 which maybe an outlier. Build a new datasets without this outliers.
+From the output of our model, we could see that outcome_typeFOSTER is not significant, think about the scatter plot of time_at_shelter against outcome_type, there exits a very large time_at_shelter value equal to 69 which maybe an outlier. Build a new datasets without this outlier.
 
 ```{r}
 animaldata<-animals.cleaned[-617,]
@@ -86,55 +75,32 @@ animals.glm%>%
   summary()
 ```
 
-We could see all the variables are significant here.
-
 ```{r}
-#person statistic
+#Person statistic
 sum(resid(animals.glm ,type="pearson")^2)
-#Chi-Square(1667)
+#Chi-Square(1666)
 qchisq(0.95,1666,ncp=0)
 ```
 
-From summary, we could see that all other variables are significant in our model. However, both the deviance 8654.6 and pearson statistic 11552.79 are larger than Chi-Square(1666)  1762.07 which indicate a poor fit.
-
-
+In general, we can see that all variables are significant in our model. However, both the deviance 8654.6 and Pearson statistic 11064.29 are larger than Chi-Square(1666)  1762.07 which indicates a poor fit.
 
 #check if this model has Overdispersion
-For poisson model, variance should equal to mean. We build scatter plots to check this assumption.
+For poisson model, variance should be equal to mean. We build scatter plots to check this assumption.
 ```{r}
 
 ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animaldata$time_at_shelter-fitted(animals.glm))^2)))+ geom_point(col="#f46d43") +geom_abline(slope=1, intercept=0, col="#a6d96a", size=1) + ylab(expression((y-hat(mu))^2)) + xlab(expression(hat(mu)))
 ```
 
 We could see that a large number of points are above the line which means our model exits overdispersion. There are several methods to deal with overdispersion.
-
+#Quasi-Poisson model
 Firstly, we use Quasi-Poisson model to deal with overdispersion.
-#Quasi-Poisson model
-```{r}
-animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata, family=quasipoisson(link="log"))
-
-ggplot(animals.glm, aes(x=log(fitted(animals.glm)), y=log((animaldata$time_at_shelter-fitted(animals.glm))^2)))+ geom_point(col="#f46d43") +geom_abline(slope=1, intercept=0, col="#a6d96a", size=1) + ylab(expression((y-hat(mu))^2)) + xlab(expression(hat(mu)))
-```
-
-We could see that a large number of points are above the line which means these exits overdispersion. There are several methods to deal with overdispersion.
-
-Firstly, we use Quasi-Poisson model to deal with overdispersion
-#Quasi-Poisson model
 ```{r}
 animals.glm.quasi = glm(time_at_shelter~animal_type + intake_type + chip_status+outcome_type, data=animaldata, family=quasipoisson(link="log"))
 animals.glm.quasi%>%
   summary()
 drop1(animals.glm.quasi, test = "F")
 ```
-Based on F-test, all variables are significant here and could be included in our model.
-
-Compare the deviance of poisson model and quasi-poisson model.
-```{r}
-c(animals.glm$deviance, animals.glm.quasi$deviance)
-```
-
-The deviance of Quasi-Poisson model is equal to poisson model.
-
+Based on F-test, all variables are significant here and can be included in our model.
 
 Residual plots vs. predicted
 ```{r}
@@ -149,10 +115,10 @@ stand.resid <- rstandard(model = animals.glm.quasi, type = "pearson") # Standard
 plot(x = pred, y = stand.resid, xlab = "Predicted count", ylab = "Standardised Pearson residuals", main = "Quasi-likelihood", ylim = c(-5,5))
 abline(h = c(-3, -2, 0, 2, 3), lty = "dotted", col = "red")
 ```
-We can see in the plots that almost all residuals are contained within ±3 in the quasi-Poisson model, while quite a few are outside this range for the original Poisson model.
+We can see in the plots that most of the residuals are contained within ±3 in the quasi-Poisson model, while quite a few are outside this range for the original Poisson model.
 
+# neagative binomial model
 Another way to solve overdispersion is negative binomial model
-<<<<<<< HEAD
 ```{r}
 animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata)
 animals.glm.nb%>%
@@ -160,26 +126,10 @@ animals.glm.nb%>%
 ```
 compare the poisson model and negative binomial model
 ```{r}
-#deviance
-c(animals.glm$deviance,animals.glm.nb$deviance)
-#negative binomial model
-c(animals.glm.nb$aic,animals.glm.nb$aic)
-```
-We can see the deviance of negative binomial model is much smaller than the poisson one, and as for AIC, both model are equal.
-
-```{r}
-animals.glm.nb=glm.nb(time_at_shelter~animal_type + intake_type + chip_status+ outcome_type, data=animaldata)
-animals.glm.nb%>%
-  summary()
-```
-compare the poisson model and negative binomial model
-```{r}
-#deviance 
-c(animals.glm$deviance,animals.glm.nb$deviance)
 #AIC
 c(animals.glm$aic,animals.glm.nb$aic)
 ```
-We can see the deviance and AIC of negative binomial model are much smaller than the poisson one.
+We can see the AIC of negative binomial model is much smaller than poisson model.
 
 #deal with zero-exceed.
 ```{r}
@@ -196,14 +146,12 @@ we could see that 380 "0" counts hurdle model predict which happens to be the nu
 
 check if the hurdle model fit our data well
 ```{r}
-
-#install.packages("countreg", repos="http://R-Forge.R-project.org")
+install.packages("countreg", repos="http://R-Forge.R-project.org")
 library(countreg)
 rootogram(animal.hurdle, max = 80)
 ```
-The line at 0 allows us to easily visualize where the model is over- or under-fitting. At 0 it fits perfectly by design.We could see that counts 3,4 we see dramatic over-fitting (over the line) and then pronounced under-fitting at counts 5 (under the line), but not very much. Check AIC, we could see that aic of hurdle model is lower which means better fit.
+The line at 0 allows us to easily visualize where the model is over-fitting or under-fitting.If it is on zero line, it means a good fit. We could see that counts 3,4 dramatic over-fitting (over the line) and then pronounced under-fitting at counts 5 (under the line), but not very much. Check AIC, we could see that aic of hurdle model is lower which means better fit.
 ```{r}
-c(animals.glm.nb$aic,animals.glm.nb$aic)
 AIC(animal.hurdle)
 ```
 
