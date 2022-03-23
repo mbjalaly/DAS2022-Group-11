@@ -202,7 +202,7 @@ Compared with model A, **animal_typeDOG**,**chip_status_UNABLE TO SCAN**,**outco
 To interpret coefficients,let's take animal_type as an example. The positive count ratio is:
 (here put those two equations)
 $$\frac{DOGS}{CATS}=exp(0.06531)$$
-$$\frac{OTHER\_TYPES}{CATS}=exp(0.31221)$$
+$$\frac{CATS}{OTHER\_TYPES}=exp(0.31221)$$
 Both these two equations are based on the assumption that other variables are held constant.
 
 
