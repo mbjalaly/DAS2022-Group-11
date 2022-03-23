@@ -16,6 +16,7 @@ library(scales)
 library(skimr)
 library(magrittr)
 animals = read_csv("dataset11.csv")
+animals_with_date = read_csv("dataset11_with_date.csv")
 ```
 
 # Exploratory Data Analysis
@@ -67,11 +68,13 @@ ggplot(animals, mapping=aes(x=intake_type, fill=factor(animal_type))) +
 
 Additionally, we want to look at the animals arrival trend to the shelter.
 
-```{r arrivaldistribution, eval=TRUE, echo=TRUE}
+```{r arrivaldistribution, eval=FALSE, echo=TRUE}
 
 # adding a date column
-View(animals)
-animals %>% 
+animals_with_date = animals
+animals_with_date$date = as.yearmon(paste(animals$year, animals$month), "%Y %m")
+                                 
+animals_with_date %>% 
   group_by(date) %>% 
   summarize(Animals_arriving=n()) %>% 
   ggplot(mapping = aes(x=date, y=Animals_arriving))+
