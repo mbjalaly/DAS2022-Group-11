@@ -198,7 +198,7 @@ model A:
 
 $$ log(\frac{u_i}{1-u_i})= 7.8792+0.8581 ~ Animal\_type\_DOG-4.7983 ~ Owner\_SURRENDER_1 ~ -3.7933 ~ intake\_type\_STRAY -1.0526 ~ chip\_status\_UNABLE\_TO\_SCAN-2.3051~ outcome\_type\_DIED - 3.5892~outcome\_type\_EUTHANIZED -2.7973 ~ outcome\_typeFOSTER- 4.7999 ~ outcome\_type\_RETURNED\_TO\_OWNER $$
 
-In this model,except for **animal_typeOTHERS** and **chip_statusSCAN NO CHIP **, all others are significant. Let's take animal_type as an example, dog's odds of staying at shelter
+In this model,except for **animal_typeOTHERS** and **chip_statusSCAN NO CHIP**, all others are significant. Let's take animal_type as an example, dog's odds of staying at shelter
 is exp(0.8581) times as large as the odds of cat by assuming other variables are held constant. And cat's odds of staying at shelter is exp(0.8236) times as large as the odds of other animals by assuming other variables are held constant.
 Another model is:
 model B
