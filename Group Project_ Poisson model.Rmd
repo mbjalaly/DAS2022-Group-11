@@ -194,9 +194,14 @@ compareGLM(animals.glm,animals.glm.nb)
 # conclusion
 Based on the AIC, we finally use hurdle nagative binomial model to fit our data.
 
+model A:
+
+$$ log(\frac{u_i}{1-u_i})= 7.8792+0.8581 ~ Animal\_type\_DOG-4.7983 ~ Owner\_SURRENDER_1 ~ -3.7933 ~ intake\_type\_STRAY -1.0526 ~ chip\_status\_UNABLE\_TO\_SCAN-2.3051~ outcome\_type\_DIED - 3.5892~outcome\_type\_EUTHANIZED -2.7973 ~ outcome\_typeFOSTER- 4.7999 ~ outcome\_type\_RETURNED\_TO\_OWNER $$
+
 In this model,except for **animal_typeOTHERS** and **chip_statusSCAN NO CHIP **, all others are significant. Let's take animal_type as an example, dog's odds of staying at shelter
 is exp(0.8581) times as large as the odds of cat by assuming other variables are held constant. And cat's odds of staying at shelter is exp(0.8236) times as large as the odds of other animals by assuming other variables are held constant.
 Another model is:
+model B
 $$ log(\frac{p_i}{1-p_i}) = 3.18537-1.35700 ~ Owner\_SURRENDER_1~ -0.91826 ~ intake\_type\_STRAY -0.32018 ~ outcome\_type\_EUTHANIZED -1.14834~outcome\_type\_RETURNED\_TO\_OWNER $$
 Compared with model A, **animal_typeDOG**,**chip_status_UNABLE TO SCAN**,**outcome_type_FOSTER ** and **outcome_type_DIED** are not significant anymore. It means these variables impact whether or not animals will stay at shelter, but they don't impact how many days they will stay at shelter.
 To interpret coefficients,let's take animal_type as an example. The positive count ratio is:
