@@ -178,7 +178,7 @@ library(countreg)
 rootogram(animal.hurdle, max = 80)
 ```
 
-The line at 0 allows us to easily visualize where the model is over- or under-fitting. At 0 it fits perfectly by design.We could see that counts 3,4 we see dramatic over-fitting (over the line) and then pronounced under-fitting at counts 5 (under the line), but not very much. Check AIC, we could see that aic of hurdle model is lower which means better fit.
+The line at 0 allows us to easily visualize where the model is over- or under-fitting. At 0 it fits perfectly by design.We could see that counts 3,4 we see little over-fitting (over the line) and then pronounced under-fitting at counts 5 (under the line), but not very much. Check AIC, we could see that aic of hurdle model is lower which means better fit.
 
 ```{r}
 AIC(animal.hurdle)
@@ -193,7 +193,7 @@ compareGLM(animals.glm,animals.glm.nb)
 ```
 # conclusion
 Based on the AIC, we finally use hurdle nagative binomial model to fit our data.
-$$ log(\frac{u_i}{1-u_i})= 7.8792+0.8581 ~ Animal\_type\_DOG-4.7983 ~ Owner\_SURRENDER_1 ~ -3.7933 ~ intake\_type\_STRAY -1.0526 ~ chip\_status\_UNABLE\_TO\_SCAN-2.3051~ outcome\_type\_DIED - 3.5892~outcome\_type\_EUTHANIZED -2.7973 ~ outcome\_typeFOSTER- 4.7999 ~ outcome\_type\_RETURNED\_TO\_OWNER $$
+
 In this model,except for **animal_typeOTHERS** and **chip_statusSCAN NO CHIP **, all others are significant. Let's take animal_type as an example, dog's odds of staying at shelter
 is exp(0.8581) times as large as the odds of cat by assuming other variables are held constant. And cat's odds of staying at shelter is exp(0.8236) times as large as the odds of other animals by assuming other variables are held constant.
 Another model is:
